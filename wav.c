@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "LeerWav.h"
+#include "wav.h"
 
 int LeerWav(const char *nombrearchivo, archivowav *wav) {//no compila esto solo porque no es un main()
     
@@ -50,8 +50,41 @@ int LeerWav(const char *nombrearchivo, archivowav *wav) {//no compila esto solo 
 
     fread(wav->samples, 1, wav->data_size, f); //me llevo los samples del audio a la estructura
 
+    wav->num_frames = wav->data_size/wav->block_align;
+
     fclose(f);
     return 0;
+}
+
+int exportwav(const char *nombrearchivo, archivowav *wav){ 
+    FILE *f = fopen(nombrearchivo, "wb");
+    if (!f) return -1;
+
+    uint32_t riff_size = 36 + wav->data_size;
+
+    // Encabezado
+    fwrite("RIFF", 1, 4, f);
+    fwrite(&riff_size, 4, 1, f);
+    fwrite("WAVE", 1, 4, f);
+    fwrite("fmt ", 1, 4, f);
+
+    uint32_t fmt_size = 16;
+    fwrite(&fmt_size, 4, 1, f);
+
+    fwrite(&wav->format,      2, 1, f);
+    fwrite(&wav->channels,    2, 1, f);
+    fwrite(&wav->sample_rate, 4, 1, f);
+    fwrite(&wav->byte_rate,   4, 1, f);
+    fwrite(&wav->block_align, 2, 1, f);
+    fwrite(&wav->bits,        2, 1, f);
+
+    /* data chunk */
+    fwrite("data", 1, 4, f);
+    fwrite(&wav->data_size, 4, 1, f);
+    fwrite(wav->samples, 1, wav->data_size, f);
+
+    fclose(f);
+    return 0;   
 }
 
 void LiberarWav(archivowav *wav)

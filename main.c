@@ -1,11 +1,18 @@
 #include <stdio.h>
-#include "LeerWav.h"
+#include "wav.h"
+#include "wav.c"
+#include "flotante.h"
+#include "flotante.c"
+#include "volumen.c"
+#include "volumen.h"
+#include <stdlib.h>
+
 
 int main(void)
 {
-    archivowav wav;
+    archivowav wav; //creo mi objeto wav con la estructura archivowav
 
-    if (LeerWav("audio.wav", &wav) != 0) {
+    if (LeerWav("audio.wav", &wav) != 0) { //cargo el objeto wav con la data del archivo segun la estructura archivowav
         printf("Error leyendo WAV\n");
         return 1;
     }
@@ -15,19 +22,19 @@ int main(void)
     printf("Bits por muestra: %d\n", wav.bits);
     printf("Bytes de audio: %u\n", wav.data_size);
 
-    if (wav.bits == 16) {
-        int16_t *s = (int16_t *)wav.samples;
-        printf("Primera muestra: %d\n", s[0]);
-    }
+    float *audio_flotante = malloc(wav.num_frames * wav.channels * sizeof(float)); //se reserva la cantidad de muestras multiplicado por los canales.
+    void *audio_PCM = malloc(wav.data_size); //reservo memoria para el pcm de salida
 
-    float *out = malloc(num_samples * sizeof(float));
+    pcm_flotante(wav.samples,audio_flotante,(wav.num_frames * wav.channels),wav.bits);
+    volumen_flotante(audio_flotante,(wav.num_frames * wav.channels),2.0f);
+    flotante_pcm(audio_flotante,audio_PCM,(wav.num_frames * wav.channels),wav.bits);
 
-    pcm_flotante(wav.samples,out,wav.data_size,wav.bits);
-        
-    for (int i = 0; i < 4; i++) {
-        printf("%f\n", out[i]);
-    }
+    free(wav.samples); //libero la memoria del wav original
+    wav.samples = audio_PCM; //asigno el nuevo pcm al wav
+    exportwav("audio_exportado.wav",&wav);
 
+    free(audio_flotante);
+    free(audio_PCM);
     LiberarWav(&wav);
     return 0;
 }
