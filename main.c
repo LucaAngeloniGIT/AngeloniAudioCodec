@@ -5,8 +5,14 @@
 #include "flotante.c"
 #include "volumen.c"
 #include "volumen.h"
+#include "frames.h"
+#include "frames.c"
+#include "ventana_hann.c"
+#include "ventana_hann.h"
 #include <stdlib.h>
 
+#define frame_size 1024
+#define hop_size frame_size/2 //%50 overlap
 
 int main(void)
 {
@@ -22,19 +28,32 @@ int main(void)
     printf("Bits por muestra: %d\n", wav.bits);
     printf("Bytes de audio: %u\n", wav.data_size);
 
-    float *audio_flotante = malloc(wav.num_frames * wav.channels * sizeof(float)); //se reserva la cantidad de muestras multiplicado por los canales.
-    void *audio_PCM = malloc(wav.data_size); //reservo memoria para el pcm de salida
+    int num_samples = wav.num_frames * wav.channels;
 
-    pcm_flotante(wav.samples,audio_flotante,(wav.num_frames * wav.channels),wav.bits);
-    volumen_flotante(audio_flotante,(wav.num_frames * wav.channels),2.0f);
-    flotante_pcm(audio_flotante,audio_PCM,(wav.num_frames * wav.channels),wav.bits);
+    float *buffer_audio_flotante = malloc(num_samples * sizeof(float)); //se reserva la cantidad de muestras multiplicado por los canales.
+    void *buffer_audio_pcm = malloc(wav.data_size); //reservo memoria para el pcm de salida
 
+    pcm_flotante(wav.samples,buffer_audio_flotante,(num_samples),wav.bits);
+    //volumen_flotante(buffer_audio_flotante,(num_samples),2.0f);
+
+    /* frames*/
+
+    float *ventana = malloc(frame_size * sizeof(float));
+    ventana_hann(ventana, frame_size);
+    float *buffer_audio_frames = calloc(num_samples, sizeof(float)); //calloc inicia en 0 el buffer
+
+    procesar_frames(buffer_audio_flotante, buffer_audio_frames,num_samples, frame_size, hop_size, ventana);
+    free(ventana);
+
+    /*Exportar devuelta a PCM*/
+
+    flotante_pcm(buffer_audio_flotante,buffer_audio_pcm,(num_samples),wav.bits);
     free(wav.samples); //libero la memoria del wav original
-    wav.samples = audio_PCM; //asigno el nuevo pcm al wav
+    wav.samples = buffer_audio_pcm; //asigno el nuevo pcm al wav
     exportwav("audio_exportado.wav",&wav);
 
-    free(audio_flotante);
-    free(audio_PCM);
+    free(buffer_audio_flotante);
+    free(buffer_audio_pcm);
     LiberarWav(&wav);
     return 0;
 }
