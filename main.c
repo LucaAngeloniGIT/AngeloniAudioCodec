@@ -1,13 +1,8 @@
 #include <stdio.h>
 #include "wav.h"
-#include "wav.c"
 #include "flotante.h"
-#include "flotante.c"
-#include "volumen.c"
 #include "volumen.h"
 #include "frames.h"
-#include "frames.c"
-#include "ventana_hann.c"
 #include "ventana_hann.h"
 #include <stdlib.h>
 
@@ -34,7 +29,7 @@ int main(void)
     void *buffer_audio_pcm = malloc(wav.data_size); //reservo memoria para el pcm de salida
 
     pcm_flotante(wav.samples,buffer_audio_flotante,(num_samples),wav.bits);
-    //volumen_flotante(buffer_audio_flotante,(num_samples),2.0f);
+    volumen_flotante(buffer_audio_flotante,(num_samples),2.0f);
 
     /* frames*/
 
