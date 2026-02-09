@@ -2,8 +2,8 @@
 #include "wav.h"
 #include "flotante.h"
 #include "volumen.h"
-#include "frames.h"
 #include "ventana_hann.h"
+#include "efectos.h"
 #include <stdlib.h>
 
 #define frame_size 1024
@@ -37,12 +37,12 @@ int main(void)
     ventana_hann(ventana, frame_size);
     float *buffer_audio_frames = calloc(num_samples, sizeof(float)); //calloc inicia en 0 el buffer
 
-    procesar_frames(buffer_audio_flotante, buffer_audio_frames,num_samples, frame_size, hop_size, ventana);
+    ecualizador(buffer_audio_flotante, buffer_audio_frames,num_samples, frame_size, hop_size, ventana, wav.sample_rate,5000.0f);
     free(ventana);
 
     /*Exportar devuelta a PCM*/
 
-    flotante_pcm(buffer_audio_flotante,buffer_audio_pcm,(num_samples),wav.bits);
+    flotante_pcm(buffer_audio_frames,buffer_audio_pcm,(num_samples),wav.bits);
     free(wav.samples); //libero la memoria del wav original
     wav.samples = buffer_audio_pcm; //asigno el nuevo pcm al wav
     exportwav("audio_exportado.wav",&wav);
