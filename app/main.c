@@ -11,7 +11,7 @@
 
 int main(void)
 {
-    archivowav wav; //creo mi objeto wav con la estructura archivowav
+    archivowav wav; //creo mi instancia wav con la estructura archivowav
 
     if (LeerWav("audio.wav", &wav) != 0) { //cargo el objeto wav con la data del archivo segun la estructura archivowav
         printf("Error leyendo WAV\n");
@@ -35,9 +35,10 @@ int main(void)
 
     float *ventana = malloc(frame_size * sizeof(float));
     ventana_hann(ventana, frame_size);
+    
     float *buffer_audio_frames = calloc(num_samples, sizeof(float)); //calloc inicia en 0 el buffer
-
     ecualizador(buffer_audio_flotante, buffer_audio_frames,num_samples, frame_size, hop_size, ventana, wav.sample_rate,5000.0f);
+    
     free(ventana);
 
     /*Exportar devuelta a PCM*/
